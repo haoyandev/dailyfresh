@@ -1,0 +1,4 @@
+# 定义需要建立索引的字段
+{{ object.name }}
+{{ object.desc }}
+{{ object.goods.detail }}

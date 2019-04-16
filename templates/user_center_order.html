@@ -1,0 +1,119 @@
+{% extends 'base_user_center.html' %}
+{% load staticfiles %}
+{% block right_content %}
+	<div class="right_content clearfix">
+
+				<h3 class="common_title2">全部订单</h3>
+			{% for order in orders %}
+				<ul class="order_list_th w978 clearfix">
+					<li class="col01">{{ order.create_time }}</li>
+					<li class="col02">订单号：{{ order.order_id }}</li>
+					<li class="col02 stress">{{ order.status }}</li>
+				</ul>
+
+				<table class="order_list_table w980">
+					<tbody>
+						<tr>
+							<td width="55%">
+								{% for sku in order.skus %}
+								<ul class="order_goods_list clearfix">					
+									<li class="col01"><img src="{{ sku.sku.image.url }}"></li>
+									<li class="col02">{{ sku.sku.name }}<em>{{ sku.price }}元/{{ sku.sku.units }}</em></li>
+									<li class="col03">1</li>
+									<li class="col04">{{ sku.price }}元</li>
+								</ul>
+								{% endfor %}
+							</td>
+							<td width="15%">({{ order.total_price }}:含运费)元</td>
+							<td width="15%">{{ order.status }}</td>
+							{% csrf_token %}
+							<td width="15%"><a href="#" class="oper_btn" order_id="{{ order.order_id }}" order_status="{{ order.order_status }}">{{ order.status }}</a></td>
+						</tr>
+					</tbody>
+				</table>
+			{% empty %}
+			暂无订单
+			{% endfor %}
+
+		<div class="pagenation">
+				{% if page_data.has_previous %}
+					<a href="{% url 'user:order' page_data.previous_page_number %}">上一页</a>
+				{% endif %}
+				{% for index in pages %}
+					{% if index == page.number %}
+					<a href="{% url 'user:order' index %}" class="active">{{ index }}</a>
+					{% else %}
+					<a href="{% url 'user:order' index %}">{{ index }}</a>
+					{% endif %}
+				{% endfor %}
+				{% if page_data.has_next %}
+					<a href="{% url 'user:order' page_data.next_page_number %}">下一页></a>
+				{% endif %}
+			</div>
+		</div>
+{% endblock right_content %}
+{% block footfile %}
+	<script type="text/javascript" src="{% static 'js/jquery-1.12.4.min.js' %}"></script>
+	<script type="text/javascript">
+		// 判定订单状态
+
+
+		$('.oper_btn').click(function(){
+			// 获取订单信息
+			status = $(this).attr('order_status')
+			order_id = $(this).attr('order_id')
+			csrf = $('input[name="csrfmiddlewaretoken"]').val()
+			// 判断订单状态
+			if (status == 1){
+				// 组织参数
+				data = {
+					'order_id': order_id,
+					'csrfmiddlewaretoken': csrf
+				}
+				// ajax
+				$.post('/order/pay', data, function(data){
+					if (data.res == 3){
+						// 返回支付页面
+						window.open(data.pay_url)
+						// 检测支付结果
+						data = {
+							'order_id': order_id,
+							'csrfmiddlewaretoken': csrf
+						}
+						$.post('/order/check',data,function(data){
+
+							if (data.res==3){
+								alert(data.msg)
+							}
+							else{
+								alert(data.errmsg)
+							}
+
+						})
+
+					}
+					else{
+						alert(data.errmsg)
+					}
+				})
+			}
+			else if(status==4){
+				location.href = '/order/comment/'+ order_id
+
+			}
+
+
+		})
+
+
+	</script>
+{% endblock footfile%}
+
+
+
+
+
+
+
+
+

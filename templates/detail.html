@@ -1,0 +1,204 @@
+{% extends 'base_detail_list.html' %}
+{% load staticfiles %}
+{% block title %}天天生鲜-商品详情{% endblock title %}
+
+{% block body %}
+	<div class="breadcrumb">
+		<a href="#">全部分类</a>
+		<span>></span>
+		<a href="#">新鲜水果</a>
+		<span>></span>
+		<a href="#">商品详情</a>
+	</div>
+
+	<div class="goods_detail_con clearfix">
+		<div class="goods_detail_pic fl"><img src="{{ goods.image.url }}"></div>
+
+		<div class="goods_detail_list fr">
+			<h3>{{ goods.name }}</h3>
+			<p>{{ goods.desc }}</p>
+			<div class="prize_bar">
+				<span class="show_pirze">¥<em>{{ goods.price }}</em></span>
+				<span class="show_unit">单  位：{{ goods.units }}</span>
+			</div>
+			<div class="goods_num clearfix">
+				<div class="num_name fl">数 量：</div>
+				<div class="num_add fl">
+					<input type="text" class="num_show fl" value="1">
+					{% csrf_token %}
+					<a href="javascript:;" class="add fr">+</a>
+					<a href="javascript:;" class="minus fr">-</a>	
+				</div> 
+			</div>
+			<div class="total">总价：<em>16.80元</em></div>
+			<div class="operate_btn">
+				<a href="javascript:;" class="buy_btn">立即购买</a>
+				<a href="javascript:;" class="add_cart" id="add_cart" sku_id="{{ goods.id }}">加入购物车</a>
+			</div>
+		</div>
+	</div>
+
+	<div class="main_wrap clearfix">
+		<div class="l_wrap fl clearfix">
+			<div class="new_goods">
+				<h3>新品推荐</h3>
+				<ul>
+					{% for goods in new_goods %}
+					<li>
+						<a href="#"><img src="{{ goods.image.url }}"></a>
+						<h4><a href="#">{{ goods.name }}</a></h4>
+						<div class="prize">￥{{ goods.price }}</div>
+					</li>
+					{% endfor %}
+
+				</ul>
+			</div>
+		</div>
+
+		<div class="r_wrap fr clearfix">
+			<ul class="detail_tab clearfix">
+				<li class="active" id="tab_detail">商品介绍</li>
+				<li id="tab_comment">评论</li>
+			</ul>
+
+			<div class="tab_content" id="tab_detail_1">
+				<dl>
+					<dt>商品详情：</dt>
+					<dd>草莓采摘园位于北京大兴区 庞各庄镇四各庄村 ，每年1月-6月面向北京以及周围城市提供新鲜草莓采摘和精品礼盒装草莓，草莓品种多样丰富，个大香甜。所有草莓均严格按照有机标准培育，不使用任何化肥和农药。草莓在采摘期间免洗可以直接食用。欢迎喜欢草莓的市民前来采摘，也欢迎各大单位选购精品有机草莓礼盒，有机草莓礼盒是亲朋馈赠、福利送礼的最佳选择。 </dd>
+				</dl>
+			</div>
+
+			<div class="tab_content" id="tab_comment_1" style="display:none">
+				<dl>
+					{% for goods in order_goods %}
+					<dt>评论时间：{{ goods.update_time }} 用户名:{{ goods.order.user.username }}</dt>
+					<dd>评论内容:{{ goods.comment }}</dd>
+					{% endfor %}
+				</dl>
+			</div>
+
+		</div>
+	</div>
+{% endblock body %}
+
+{% block footfile %}
+<div class="add_jump"></div>
+	<script type="text/javascript" src="{% static 'js/jquery-1.12.4.min.js' %}"></script>
+	<script type="text/javascript">
+	// 商品简介和评论js
+	$('#tab_detail').click(function(){
+		$(this).addClass('active')
+		$('#tab_comment').removeClass('active')
+		$('#tab_detail_1').show()
+		$('#tab_comment_1').hide()
+	})
+
+	$('#tab_comment').click(function(){
+		$(this).addClass('active')
+		$('#tab_detail').removeClass('active')
+		$('#tab_comment_1').show()
+		$('#tab_detail_1').hide()
+	})
+
+
+
+	// 获取价格和数量
+	get_price_sum()
+	function get_price_sum(){
+		price = $('.show_pirze').children('em').text()
+		count = $('.num_show').val()
+		// 计算总价
+		price_sum = parseFloat(price)*parseInt(count)
+		// 更新总价
+		$('.total').children('em').text(price_sum.toFixed(2)+'元')
+
+	}
+
+	// 增加商品
+	$('.add').click(function(){
+		// 获取原始数量
+		count = $('.num_show').val()
+		count = parseInt(count)+1
+		// 更新总数
+		$('.num_show').val(count)
+		// 更新总价
+		get_price_sum()
+
+	})
+
+	// 减少商品
+	$('.minus').click(function(){
+		// 获取原始数量
+		count = $('.num_show').val()
+		count = parseInt(count)-1
+		if (count < 1){
+			count = 1
+			}
+		// 更新总数
+		$('.num_show').val(count)
+		// 更新总价
+		get_price_sum()
+	})
+
+	// 手动输入数量
+	$('.num_show').blur(function(){
+		// 获取原始数量
+		count = $(this).val()
+		if (isNaN(count) || count.trim().length==0 || parseInt(count) <= 0){
+			count = 1
+
+		}
+		// 更新总数
+		$('.num_show').val(count)
+		// 更新总价
+		get_price_sum()
+	})
+
+		var $add_x = $('#add_cart').offset().top;
+		var $add_y = $('#add_cart').offset().left;
+
+		var $to_x = $('#show_count').offset().top;
+		var $to_y = $('#show_count').offset().left;
+
+		$('#add_cart').click(function(){
+		// post请求
+		// 获取商品id和数量
+		sku_id = $('#add_cart').attr('sku_id')
+		count = $('.num_show').val()
+
+		// 获取csrf值
+		csrf_value = $('input[name="csrfmiddlewaretoken"]').val()
+
+		// 组织参数
+		data = {
+				'sku_id':sku_id,
+				'count':count,
+				'csrfmiddlewaretoken':csrf_value
+				}
+		// 发起post请求
+		$.post('/cart/add', data, function(data){
+			if (data.res=='5'){
+
+				$('#show_count').text(data.cart_count)
+				}
+				else if (data.res==0){
+					window.location.replace("/user/login?next=/detail/"+sku_id);
+				}
+			else{
+				alert(data.errmsg)
+				}
+
+		})
+			$(".add_jump").css({'left':$add_y+80,'top':$add_x+10,'display':'block'})
+			$(".add_jump").stop().animate({
+				'left': $to_y+7,
+				'top': $to_x+7},
+				"fast", function() {
+					$(".add_jump").fadeOut('fast',function(){
+						$('#show_count').html(data.cart_count);
+					});
+
+			});
+		})
+	</script>
+{% endblock footfile %}
