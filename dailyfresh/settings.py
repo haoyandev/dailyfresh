@@ -166,6 +166,10 @@ LOGIN_URL = '/user/login'
 # 配置图片存储系统路径
 DEFAULT_FILE_STORAGE = 'utils.fdfs.storage.FDFSStorage'
 
+# 配置自定义存储类中client_conf的路径和fdfs_url
+FDFS_CLIENT_CONF = './utils/fdfs/storge.conf'
+FDFS_URL = 'http://192.168.88.104:8888'
+
 # 全文检索框架
 HAYSTACK_CONNECTIONS = {
     'default': {
